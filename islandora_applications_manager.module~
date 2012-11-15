@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * @file
+ * Islandora Applications Manager Module
+ *
+ * This module enables the control of applications by solutions packs
+ * 
+ */
+ 
+/**
+ * Islandora_applications_manager_menu
+ *
+ * Creates the callbacks for the applications manager module.
+ * 
+ * @return array
+ *   returns an array of all of the callbacks this module uses
+ */
+ 
+function islandora_applications_manager_menu() {
+
+  /**
+   * Main Page callback: 
+   *
+   * Displays a list the current applications table and a blank form to add new applications to database.
+   *
+   */    
+  $items['admin/settings/islandora_applications'] = array(
+    'title' => 'Islandora Applications Manager Admin',
+    'description' => 'Configure Islandora Applications Manager',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_applications_manager_admin_settings', 3),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'islandora_applications_manager.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  /**
+   * Edit Page callback: 
+   *
+   * Displays a list the current applications table and a populated form to edit the selected application.
+   *
+   */    
+  $items['admin/settings/islandora_applications/%'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_applications_manager_admin_settings', 3),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'islandora_applications_manager.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  
+  /**
+   * Main Page callback: 
+   *
+   * Displays a list the current applications table and a blank form to add new applications to database.
+   *
+   */    
+  $items['islandora/applications/'] = array(
+    'page callback' => 'update_application_div',
+    'access arguments' => array('view fedora collection'),
+    'file' => 'islandora_applications_manager.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+

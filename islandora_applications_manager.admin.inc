@@ -1,0 +1,317 @@
+<?php
+
+/**
+ * @file
+ * The theme system, which controls the output of Drupal.
+ *
+ * The theme system allows for nearly all output of the Drupal system to be
+ * customized by user themes.
+ */
+
+/**
+ * Islandora Applications Manager Admin Settings
+ *
+ * This is the main page tha shows the list of all applications that are stored on the database 
+ * and shows a edit form that pulls data from the database and pre populate the form with the db 
+ * information 
+ *
+ * @param array $form_state
+ *   
+ * @param string $application
+ *   the string that represents a key to pull data from the database.
+ *
+ * @return array
+ *   returns the table and the form that are created on this page.
+ * 
+ */
+function islandora_applications_manager_admin_settings(&$form_state, $application = '') {
+    
+  //create a form to hold all of your content
+  $form = array();
+
+  //we want to display the table of all of the applications that are stored on the database.
+  $form['islandora_applications_manager_table'] = islandora_applications_manager_admin_table();
+  
+  //we want a form to be able to edit and add a new application to the database
+  $form['islandora_applications_manager_form'] = islandora_applications_manager_admin_form($application); 
+
+  //return the form
+  return ($form);
+}
+
+/**
+ * Islandora Applications Manager Admin Table
+ *
+ * This is a function to return a table that is populated with all of the applications that are
+ * currently stored on the database.
+ *
+ * @return array
+ *   returns the table  that is populated from content form the database.
+ * 
+ */
+function islandora_applications_manager_admin_table() {
+  
+  //create an array to be used by the theme_table as the data parameter
+  $data = array();
+  
+  //query the database to get all of the rows in the table islandora_application
+  $query = db_query('SELECT application, path, solutionpack FROM {islandora_applications}');
+  
+  //iterate through the query and add a link to the application field.  Then push that row to
+  //an array to be used for the theme_table
+  while ($row = db_fetch_array($query)) {
+    
+    // create a link for the application to pass the application parameter to the settings hook
+    $row['application'] = l($row['application'], 'admin/settings/islandora_applications/' . $row['application']);
+   
+    //push changes with link to the $data array
+    array_push($data, $row);
+  }
+  //return a theme_table
+  return array('#value' => theme_table(array('Application', 'Path', 'Solution pack'), $data)); 
+
+}  
+
+/**
+ * Islandora Applications Manager Admin Form
+ *
+ * This is a function to return a form that is populated with one or none of the database 
+ * entries based on the $application variable.
+ *
+ * @param array $form_state
+ *   
+ * @param string $application
+ *   the string that represents a key to pull data from the database.
+ *
+ * @return array
+ *   returns the form.
+ * 
+ */
+function islandora_applications_manager_admin_form($application = '') {
+  
+  //create a form to hold all of your content
+  $form = array();
+  
+  //we want to get the object in the database that matches the $application.
+  $query = db_query("SELECT * FROM {islandora_applications} WHERE application = '%s'", $application);  
+  //fetch the results that came back from the query    
+  $application_data = db_fetch_array($query);
+  
+  //create a ahah container to group all of our fields together.
+  $form['islandora_applications_manager_ahah_wrapper'] = array(
+    '#prefix' => '<div id="iapplications-url">',
+    '#suffix' => '</div>',
+    '#type' => 'fieldset',
+  );
+  
+  //first text box is the application name (this is the key for the schema)
+  $form['islandora_applications_manager_ahah_wrapper']['islandora_applications_application']  = array(
+    '#type' => 'textfield',
+    '#title' => t('Name of application'),
+    '#description' => t('Enter the name of the application of the application'),
+    '#default_value' => $application_data['application'],
+    '#ahah' => array(
+      'path' => 'islandora/applications/',
+      'wrapper' => 'iapplication-url',
+      'keypress' => TRUE,
+      'effect' => 'fade',
+      'event' => 'change'),
+  );
+  
+  //second text box is the path to where the application is located
+  $form['islandora_applications_manager_ahah_wrapper']['islandora_applications_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Path to executable'),
+    '#description' => t('Path to application program on your server. '),
+    '#default_value' => $application_data['path'],
+    '#ahah' => array(
+      'path' => 'islandora/applications/',
+      'wrapper' => 'iapplication-url',
+      'keypress' => TRUE,
+      'effect' => 'fade',
+      'event' => 'change'),
+  );
+  
+  //third text box is the command that will be executed by the application.
+  $form['islandora_applications_manager_ahah_wrapper']['islandora_applications_command'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Command to execute'),
+    '#description' => t('application command to be used. '),
+    '#default_value' => $application_data['command'],
+    '#ahah' => array(
+      'path' => 'islandora/applications/',
+      'wrapper' => 'iapplication-url',
+      'keypress'=> TRUE,
+      'effect' => 'fade',
+      'event' => 'change'),
+  );
+  
+  //the forth text box is the solution pack that the application belongs to.
+  $form['islandora_applications_manager_ahah_wrapper']['islandora_applications_solutionpack'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Solution Pack'),
+    '#description' => t('The solution pack the application is associated with. '),
+    '#default_value' => $application_data['solutionpack'],
+    '#ahah' => array(
+      'path' => 'islandora/applications/',
+      'wrapper' => 'iapplication-url',
+      'keypress' => TRUE,
+      'effect' => 'fade',
+      'event' => 'change'),
+  );
+  
+  //ok lets deal with the buttons
+  //when there is no   
+  
+  //we want to add an add/update button to subit the form
+  $submit_text = $application =='' ? 'Add' : 'Update';
+  $form['islandora_applications_manager_ahah_wrapper']['buttons']['submit'] = array('#type' => 'submit', '#value' => t($submit_text), '#submit' => array('islandora_applications_manager_admin_form_submit'));
+
+  //we want to add an Clear button to return to the main page and out of edit  
+  $form['islandora_applications_manager_ahah_wrapper']['buttons']['reset'] = array('#type' => 'submit', '#value' => t('Clear'), '#submit' => array('islandora_applications_manager_admin_form_submit'));
+  
+  //we want to add a delete button but only when we are in edit mode
+  if ($application != '') { 
+    $form['islandora_applications_manager_ahah_wrapper']['buttons']['delete'] = array('#type' => 'submit', '#value' => t('delete'), '#submit' => array('islandora_applications_manager_admin_form_submit'));  
+  }
+  //we want to set your theme  
+  $form['islandora_applications_manager_ahah_wrapper']['#theme'] = 'system_settings_form';
+  
+  //return the form
+  return ($form);
+  
+}
+  
+/**
+ * Islandora Applications Manager Admin Form Submit
+ *
+ * This function process the form to update the database 
+ *
+ * @param array $form
+ *   
+ * @param array $form_state
+ *   
+ * @param string $application
+ *   the string that represents a key to pull data from the database.
+ *
+ * @return array
+ *   returns the table and the form that are created on this page.
+ * 
+ */
+function islandora_applications_manager_admin_form_submit($form, &$form_state) {
+ 
+  //we need to know the operation of which button was pressed
+  $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
+ 
+  $obje = json_decode(islandora_audio_sp_islandora_applications_manager_registry());
+  dsm($obje);
+  //if the op is sumbit then we want to add the object to the database
+  if ($form_state['values']['op'] == $form_state['values']['submit']) {
+    
+    //get the schema for this module
+    $schema = drupal_get_schema('islandora_applications');
+
+    //create a new stdclass to create our new object to be stored in the database
+    $new_application = new stdClass();
+ 
+    //iterate through the fields in the schema and populate the 
+    foreach ($schema['fields'] as $key => $value) {
+      $new_application->$key = $form_state['values']['islandora_applications_' . $key];
+    }
+
+    //we need to determine if we are updating or inserting so we check to see if an object in the database exists
+    //$exists = islandora_applications_manager_edit($form_state['values']['islandora_applications_application']);
+    $query = db_query("SELECT * FROM {islandora_applications} WHERE application = '%s'", $form_state['values']['islandora_applications_application']);  
+    $exists = db_fetch_array($query);  
+
+    //if it does exist then we will update else insert
+    if ($exists) {
+
+      //update the application
+      $success = drupal_write_record('islandora_applications', $new_application, $schema['primary key']);
+      
+      //display the message that the application was updated
+      drupal_set_message(t('The application has been updated to the database.')); 
+    }
+    else{
+
+      //insert the new application     
+      $success = drupal_write_record('islandora_applications', $new_application);
+      
+      //display the message that the application was inserted
+      drupal_set_message(t('The application has been inserted into the database.'));
+    }    
+  }
+  elseif ($form_state['values']['op'] == $form_state['values']['delete']) {
+    
+    //if the op is delete then remove the object from the database
+  
+    //we also need the key that will be used
+    $application_name =$form['#parameters'][2];
+    
+    //delete the application from the database
+    $success = db_query("DELETE FROM {islandora_applications} WHERE application = '%s'", $application_name);
+    
+    //display the message that the application was deleted
+    drupal_set_message(t('The application has been delete from the database.'));
+    
+  }
+ 
+  //just a note if the clear button was pressed is the default and redirects back to the main page, but
+  //all ops will return to the main page
+  $form_state['redirect'] = 'admin/settings/islandora_applications/';
+  
+}
+
+
+/**
+ * update lame div
+ */
+function update_application_div() {
+
+  $form = islandora_application_manager_callback_prep();
+  $changed_elements = $form['islandora_applications_manager_ahah_wrapper'];
+  unset($changed_elements['#prefix'], $changed_elements['#suffix']);
+  $output = theme('status_messages') . drupal_render($changed_elements);
+  dsm($output);
+  drupal_json(array(
+    'status' => TRUE,
+    'data' => $output,
+  ));
+}
+
+
+/**
+ * audio callback prep
+ * @return type
+ */
+function islandora_application_manager_callback_prep() {
+  dsm('hello');
+  $form_state = array('storage' => NULL, 'submitted' => FALSE, 'rebuild' => TRUE);
+  $form_build_id = $_POST['form_build_id'];
+  $form = form_get_cache($form_build_id, $form_state);
+  $args = $form['#parameters'];
+  $form_id = array_shift($args);
+  $form_state['post'] = $form['#post'] = $_POST;
+  // Enable the submit/validate handlers to determine whether AHAH-submittted.
+  $form_state['ahah_submission'] = TRUE;
+  $form['#programmed'] = $form['#redirect'] = FALSE;
+  drupal_process_form($form_id, $form, $form_state);
+  $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
+  return $form;
+}
+
+
+
+/**
+ * islandora_audio_sp_admin_refresh
+ * @param array $form
+ * @param array $form_state
+ */
+function islandora_applications_manager_refresh($form, &$form_state) {
+  $values = $form_state['values'];
+  unset($form_state['submit_handlers']);
+  form_execute_handlers('submit', $form, $form_state);
+  $form_state['rebuild'] = TRUE;
+}
+  

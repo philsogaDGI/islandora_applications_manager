@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ *
+ * Installs the required database schema for storing associations between XML Forms and Content Models.
+ */
+
+/**
+ * Implementation of hook_install.
+ */
+function islandora_applications_manager_install() {
+ 
+  drupal_install_schema('islandora_applications_manager');
+ 
+}
+
+/**
+ * Implementation of hook_uninstall.
+ */
+function islandora_applications_manager_uninstall() {
+  drupal_uninstall_schema('islandora_applications_manager');
+}
+
+/**
+ * Implements hook_schema().
+ */
+function islandora_applications_manager_schema() {
+  
+  $schema['islandora_applications'] = array(
+    'fields' => array(
+      'application'     => array('type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => ''),
+      'path'     => array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => ''),
+      'command'     => array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => ''),
+      'solutionpack' => array('type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => ''),
+      
+    
+
+  ),
+   'primary key' => array('application')
+  );
+
+  
+  
+  return $schema;
+}

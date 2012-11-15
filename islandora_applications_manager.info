@@ -1,0 +1,5 @@
+name = Islandora Applications Manager
+description = Islandora configurations for solution pack applications
+package = Islandora Solution Pack
+version = 6.x-dev
+core = 6.x
